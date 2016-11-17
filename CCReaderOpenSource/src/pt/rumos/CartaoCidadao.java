@@ -1,7 +1,5 @@
 package pt.rumos;
 
-import java.awt.Graphics2D;
-import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -480,44 +478,6 @@ public class CartaoCidadao
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-	}
-
-	/**
-	 * Este método é utilizado para redimencionar a fotografia da pessoa.
-	 * @param imageWidth - largura da foto pretendida.
-	 * @param imageHeight - altura da foto pretendida.
- 	 * @return devolve a mesma imagem redimensionada.
-	 * -----------------------------------------------------------------------------------------------
-	 * This method is used to resize the photograph of the person.
-	 * @param imageWidth - width of the desired photo.
-	 * @param imageHeight - height of the desired photo.
-	 * @return The same image resized.
-	 */
-	public BufferedImage getPhotoRedim(int imageWidth, int imageHeight) 
-	{
-		Jpeg2000Decoder imageDecoder = new Jpeg2000Decoder();
-
-		BufferedImage file = null;
-		try 
-		{
-			file = imageDecoder.read(picture);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		if (imageWidth == 0 && imageHeight == 0) 
-		{
-			imageWidth = file.getWidth();
-			imageHeight = file.getHeight();
-		}
-
-		Image scaledPhoto = file.getScaledInstance(imageWidth, imageHeight, Image.SCALE_SMOOTH);
-		BufferedImage photoRedimensioned = new BufferedImage(imageWidth, imageHeight, BufferedImage.TYPE_INT_ARGB);
-
-		Graphics2D graphics2D = photoRedimensioned.createGraphics();
-		graphics2D.drawImage(scaledPhoto, 0, 0, null);
-		graphics2D.dispose();
-		return photoRedimensioned;
 	}
 
 	/**
