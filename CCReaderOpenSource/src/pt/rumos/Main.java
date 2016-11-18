@@ -27,7 +27,7 @@ import net.miginfocom.swing.MigLayout;
 
 public class Main 
 {
-	private JFrame mainFrame;
+	protected JFrame mainFrame;
 	private CartaoCidadao cardReader;
 	private boolean cardPrestent = false;
 	private JLabel text;
@@ -62,12 +62,11 @@ public class Main
 		cardReader = new CartaoCidadao(false);
 
 		mainFrame = new JFrame("Leitor de Cartões do Cidadão");
-		mainFrame.setResizable(false);//Sets the window size fixed with no possibility to change the size.
-		
-		mainFrame.setSize(350, 60);//Sets the window size
+		mainFrame.setResizable(false);
+		mainFrame.setSize(350, 60);
 		mainFrame.setLocationRelativeTo(null);
-		mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);//Allows to close the window and close all processes related with the application.
-		mainFrame.getContentPane().setLayout(new MigLayout("", "[]", "[]"));//Defines the main content layout.
+		mainFrame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);//Fecha todos os processos relacionados com esta aplicação
+		mainFrame.getContentPane().setLayout(new MigLayout("", "[]", "[]"));
 		
 		text = new JLabel();
 		
@@ -76,12 +75,12 @@ public class Main
 
 		Timer clock = new Timer();
 		
-		TerminalFactory factory = TerminalFactory.getDefault();//Gets the smart card readers on the computer.
+		TerminalFactory factory = TerminalFactory.getDefault();//Obtem acesso aos leitores de cartões presentes no computador.
 		List<CardTerminal> terminals;
 		try 
 		{
-			terminals = factory.terminals().list();//Creates a list with the smart card readers.
-			smartCardReader = terminals.get(0);//Uses the first terminal on the list
+			terminals = factory.terminals().list();//Cria uma lista com os leitores.
+			smartCardReader = terminals.get(0);//Utiliza o primeiro leitor encontrado na lista.
 
 			clock.schedule(new TimerTask() 
 			{
@@ -90,18 +89,21 @@ public class Main
 				{
 					try {
 						if (!smartCardReader.isCardPresent()) 
-						{//If there is not a card present on the reader
+						{//Se não existir nenhum cartão no leitor. 
 							if (cardPrestent) cardReader.dataGetted = false;
 							cardPrestent = false;
 							text.setText("A aguardar por um cartão.");
 						} else {
 							if (!cardPrestent) 
-							{//If the last statement of the reader was with no card, avoiding double loading of the card.
+							{//Se o último estádo do leitor for cartão não presente, evitando assim uma dupla leitura do cartão.
 								text.setText("A lêr cartão.");
-								cardReader = new CartaoCidadao();//Will read the citizen card, and initialize the card class.
-								cardReader.saveData("./");//Stores the data and the photo on the project folder.
 								cardPrestent = true;
-								text.setText("Cartão lido com sucesso.");
+								cardReader = new CartaoCidadao();//Lê os dados do cartão iníciando assim a classe conectora à API Portuguesa.
+								if(cardReader.dataGetted)
+								{
+									cardReader.saveData("./");//Guarda os dados do cartão na mesma pasta onde se encontra o aplicativo jar.
+									text.setText("Cartão lido com sucesso.");
+								}								
 							}
 						}
 					} catch (CardException exception) { 
@@ -109,7 +111,7 @@ public class Main
 						Runtime.getRuntime().exit(0);					
 					}
 				}
-			}, 0, 1000);//Will check the card Statement every second.
+			}, 0, 1000);//Verifica o estádo do leitor a cada segundo.
 		} catch (CardException exception) { cardReader.errorCC(CartaoCidadao.NO_READERS_FOUND, exception.toString()); }
 	}
 }

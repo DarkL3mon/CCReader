@@ -25,14 +25,16 @@ import pteidlib.pteid;
 
 public class CartaoCidadao 
 {
+	private static boolean libLoaded;
 	static 
 	{
 		try 
 		{
 			System.loadLibrary("pteidlibj");
+			libLoaded = true;
 		} catch (UnsatisfiedLinkError error) {
 			System.err.println("Não foi possível carregar a biblioteca do Cartão do Cidadão.\n" + error);
-			Runtime.getRuntime().exit(0);
+			libLoaded = false;			
 		}
 	}
 	
@@ -51,13 +53,13 @@ public class CartaoCidadao
 					 nameMother, //Apelidos da mãe
 					 firstNameFather, //Nomes própios do pai
 					 nameFather, //Apelidos do pai
-					 height, //Lltura
+					 height, //Altura
 					 locale,//Natalidade
 					 mrz1, 
 					 mrz2, 
 					 mrz3, 
 					 notes, //Notas sobre a pessoa
-					 numBI, //Número do bilhete de identidade mais digito de confirmação
+					 numBI, //Número do bilhete de identidade e digito de confirmação
 					 numSS, //Número de segurança social
 					 numNIF, //Número de identificação cívil
 					 numSNS, //Número do serviço nacional de saúde
@@ -115,9 +117,11 @@ public class CartaoCidadao
 	protected String pin = DEFAULT_ADDR_PIN; // Pin da morada
 	protected boolean validAddrPin = true, //Indicador da viabialidade da útilização do pin de morada
 					  dataGetted = false; //Indicador de dados carregados na classe
+	protected Main main;
+	
 
 	public CartaoCidadao() { initialize(); }
-	public CartaoCidadao(boolean run) { if( run ) { initialize(); } }//used for initialize this class with out read the Citizen Card
+	public CartaoCidadao(boolean run) { if( run ) { initialize(); } }//Utilizado para iniciar esta classe sem lêr o cartão
 	
 	/**
 	 * Responsável por executar a leitura do Cartão do Cidadão.
@@ -126,6 +130,8 @@ public class CartaoCidadao
 	 */
 	private void initialize()
 	{
+		if (!libLoaded) { Runtime.getRuntime().exit(0); }//Feixa a aplicação caso não tenha sido possível carregar a API Portuguesa
+		
 		try 
 		{
 			pteid.Init("");
@@ -146,7 +152,7 @@ public class CartaoCidadao
 					System.out.println("Tipo de cartão desconhecido\r\n");
 					break;
 			}
-			this.getData(true);//It will collect Citizen Card information and also attempt to collect the address information.
+			this.getData(true);//Recolhe os dados do cartão e tenta também obter os dados da morada.
 			pteid.Exit(0);
 		} catch (PteidException exception) {
 			setErrorCode(exception);
@@ -213,7 +219,7 @@ public class CartaoCidadao
 						  + "cp4\t" + cp4 + "\r\n" 
 						  + "cp3\t" + cp3 ;
 
-		String fileName = numBI.substring(0, numBI.length() - 1);
+		String fileName = numBI.substring(0, numBI.length() - 1);// Remove o último digito que é um check digit
 		this.createTxtFile(fileName, stringText, "txt", folderPointer);
 		this.savePhoto(folderPointer, fileName);
 		this.infoMessage("Dados gravados com sucesso", "Os dados foram gravados na pasta '"+folderName+"'\ncom o nome: '"+fileName+"'");
@@ -243,8 +249,8 @@ public class CartaoCidadao
 			if (null != photoData) picture = photoData.picture;
 			dataGetted = true;
 			if (getAddress) {
-				PTEID_Pin[] pins = pteid.GetPINs();
-				addrAtempts = pins[2].triesLeft;//Collect address attempts. 
+				PTEID_Pin[] pins = pteid.GetPINs();//Índices: 0-Autenticação, 1-Certeficados, 2-Morada 
+				addrAtempts = pins[2].triesLeft;//Recolhe o número de tentativas restantes do pin da morada. 
 				pteid.VerifyPIN(pins[2].id, pin);
 
 				PTEID_ADDR addrData = pteid.GetAddr();
@@ -258,6 +264,7 @@ public class CartaoCidadao
 				pteid.Exit(0);
 			} catch (PteidException e) {
 				setErrorCode(e);
+				return false;
 			}
 		}
 		return true;
@@ -273,8 +280,8 @@ public class CartaoCidadao
 	public void getPersonalInfo(PTEID_ID userData) 
 	{
 		birthDate = userData.birthDate;
-		cardNumber = userData.cardNumber.replaceFirst("^0+(?!$)", "");
-		cardNumberPAN = userData.cardNumberPAN.replaceFirst("^0+(?!$)", "");
+		cardNumber = userData.cardNumber.replaceFirst("^0+(?!$)", "");//Remove os zeros à esquerda
+		cardNumberPAN = userData.cardNumberPAN.replaceFirst("^0+(?!$)", "");//Remove os zeros à esquerda
 		cardVersion = userData.cardVersion;
 		country = userData.country;
 		deliveryDate = userData.deliveryDate;
@@ -292,10 +299,10 @@ public class CartaoCidadao
 		mrz2 = userData.mrz2;
 		mrz3 = userData.mrz3;
 		notes = userData.notes;
-		numBI = userData.numBI.replaceFirst("^0+(?!$)", "");
-		numSS = userData.numSS.replaceFirst("^0+(?!$)", "");
-		numNIF = userData.numNIF.replaceFirst("^0+(?!$)", "");
-		numSNS = userData.numSNS.replaceFirst("^0+(?!$)", "");
+		numBI = userData.numBI.replaceFirst("^0+(?!$)", "");//Remove os zeros à esquerda
+		numSS = userData.numSS.replaceFirst("^0+(?!$)", "");//Remove os zeros à esquerda
+		numNIF = userData.numNIF.replaceFirst("^0+(?!$)", "");//Remove os zeros à esquerda
+		numSNS = userData.numSNS.replaceFirst("^0+(?!$)", "");//Remove os zeros à esquerda
 		sex = userData.sex;
 		validityDate = userData.validityDate;
 	}
@@ -368,7 +375,7 @@ public class CartaoCidadao
 			pin = JOptionPane.showInputDialog(new JFrame(), "Por favor indique o pin de morada.", "Pin da Morada", JOptionPane.WARNING_MESSAGE);
 			if (pin != null) 
 			{
-				getData(true);//Will read the citizen card
+				getData(true);//Lê os dados do Cartão do Cidadão
 				validAddrPin = true;
 			} else {
 				validAddrPin = false;
@@ -392,7 +399,7 @@ public class CartaoCidadao
 		switch (errorNumber) {
 			case NO_READERS_FOUND:
 				errorMessage("Não foi detetado nenhum leitor de cartões.");
-				Runtime.getRuntime().exit(0);
+				Runtime.getRuntime().exit(0);//Feixa a aplicação
 				break;
 			case CARD_NOT_PRESENT:
 				errorMessage("Não foi possível aceder ao Cartão do Cidadão.\nVerifique se está corretamente inserido no leitor.");
@@ -471,8 +478,9 @@ public class CartaoCidadao
 		PrintWriter outputWriter;
 		try 
 		{
-			//String textOutput = new String(text.getBytes(),"Cp1252");
-			outputWriter = new PrintWriter(new OutputStreamWriter(new FileOutputStream(outputFile),Charset.forName("Cp1252")),true);
+			FileOutputStream fos = new FileOutputStream(outputFile);
+			OutputStreamWriter osw = new OutputStreamWriter(fos,Charset.forName("Cp1252"));//Escreve o ficheiro em ANSI de modo a corresponder ao Charset do Excel 
+			outputWriter = new PrintWriter(osw,true);
 			outputWriter.write(text);			
 			outputWriter.close();
 		} catch (IOException e) {
@@ -491,7 +499,7 @@ public class CartaoCidadao
 	 */
 	public BufferedImage savePhoto(File folderPointer, String fileName) 
 	{
-		Jpeg2000Decoder imageDecoder = new Jpeg2000Decoder();
+		Jpeg2000Decoder imageDecoder = new Jpeg2000Decoder();//Leitor de Jpeg2000
 
 		BufferedImage bufferedPhoto = null;
 		try 
