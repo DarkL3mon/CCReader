@@ -1,7 +1,6 @@
 # CCReader
 Leitor de Cartões do Cidadão
 
-
 Neste pequeno aplicativo podemos encontrar um método de utilização da API do cartão do Cidadão da República Portuguesa.
 
 
@@ -14,3 +13,7 @@ Main.java demonstra como utilizar as classes da package javax.smartcardio.
 
 
 CartaoCidadao.java que demonstra como utilizar as classes da livraria 'pteidlib', esta classe pode ser utilizada como comunicador entre o middleware da API portuguêsa e a aplicação que necessita de ler os dados dos Cartões.
+
+## Requirements
+* Java installed
+* Software do Cartão de Cidadão(https://www.cartaodecidadao.pt/index.php_option=com_content&task=view&id=102&Itemid=44&lang=pt.html)
