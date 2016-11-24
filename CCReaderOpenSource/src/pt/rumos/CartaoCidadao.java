@@ -130,7 +130,7 @@ public class CartaoCidadao
 	 */
 	private void initialize()
 	{
-		if (!libLoaded) { Runtime.getRuntime().exit(0); }//Feixa a aplicação caso não tenha sido possível carregar a API Portuguesa
+		if (!libLoaded) { Runtime.getRuntime().halt(0); }//Fecha a aplicação caso não tenha sido possível carregar a API Portuguesa
 		
 		try 
 		{
@@ -264,7 +264,6 @@ public class CartaoCidadao
 				pteid.Exit(0);
 			} catch (PteidException e) {
 				setErrorCode(e);
-				return false;
 			}
 		}
 		return true;
@@ -399,7 +398,7 @@ public class CartaoCidadao
 		switch (errorNumber) {
 			case NO_READERS_FOUND:
 				errorMessage("Não foi detetado nenhum leitor de cartões.");
-				Runtime.getRuntime().exit(0);//Feixa a aplicação
+				Runtime.getRuntime().halt(0);//Fecha a aplicação
 				break;
 			case CARD_NOT_PRESENT:
 				errorMessage("Não foi possível aceder ao Cartão do Cidadão.\nVerifique se está corretamente inserido no leitor.");
@@ -505,14 +504,8 @@ public class CartaoCidadao
 		try 
 		{
 			bufferedPhoto = imageDecoder.read(picture);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		try 
-		{
 			ImageIO.write(bufferedPhoto, "jpg", new File(folderPointer, fileName + ".jpg"));
-		} catch (IOException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 
